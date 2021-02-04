@@ -4,18 +4,18 @@
 
 #include "fixedPoint.hpp"
 
-#define TEST_OP(op) \
-std::cout << "== Testing "#op" " << std::string(25, '=') << "\n"; \
-for (size_t it = 0; it < inputs.size(); ++it) { \
-    for (size_t it2 = 0; it2 < inputs.size(); ++it2) { \
-        auto a = inputs[it], b = inputs[it2]; \
-        auto c = a.get_original(), d = b.get_original();\
-        std::cout << std::setw(12) << a << " "#op" " \
-           << std::setw(12) << b << " = " \
-           << std::setw(12) << (a op b) << " == " \
-           << std::setw(12) << (c op d) << "\n"; \
-    } \
-}
+#define TEST_OP(op)                                                     \
+    std::cout << "== Testing " #op " " << std::string(25, '=') << "\n"; \
+    for (size_t it = 0; it < inputs.size(); ++it) {                     \
+        for (size_t it2 = 0; it2 < inputs.size(); ++it2) {              \
+            auto a = inputs[it], b = inputs[it2];                       \
+            auto c = a.get_original(), d = b.get_original();            \
+            std::cout << std::setw(12) << a << " " #op " "              \
+                      << std::setw(12) << b << " = "                    \
+                      << std::setw(12) << (a op b) << " == "            \
+                      << std::setw(12) << (c op d) << "\n";             \
+        }                                                               \
+    }
 
 int main()
 {
@@ -32,8 +32,7 @@ int main()
     inputs.emplace_back(FixedPoint_t<32, 32>(-653.864786786));
 
     std::cout << "== INPUTS " << std::string(25, '=') << "\n";
-    for (size_t it = 0; it < inputs.size(); ++it)
-    {
+    for (size_t it = 0; it < inputs.size(); ++it) {
         std::cout << "op" << it << " ["
                   << inputs[it].to_string() << "] "
                   << inputs[it].to_number()
