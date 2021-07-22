@@ -26,6 +26,7 @@
 #include "support.hpp"
 
 #include <fstream>
+#include <sstream>
 
 /// @brief The fixed point class.
 /// @tparam WHOLE the size of the whole part.
