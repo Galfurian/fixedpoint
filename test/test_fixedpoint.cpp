@@ -17,20 +17,19 @@
         }                                                               \
     }
 
-int main()
+int main(int argc, char *argv[])
 {
+    std::vector<FixedPoint<32, 32>> inputs;
+    inputs.emplace_back(FixedPoint<32, 32>(+6.5625));
+    inputs.emplace_back(FixedPoint<32, 32>(+4.2500));
+    inputs.emplace_back(FixedPoint<32, 32>(-2.2500));
+    inputs.emplace_back(FixedPoint<32, 32>(-4.2500));
+    inputs.emplace_back(FixedPoint<32, 32>(321.6543));
+    inputs.emplace_back(FixedPoint<32, 32>(76.7657));
+    inputs.emplace_back(FixedPoint<32, 32>(1023.2156346));
+    inputs.emplace_back(FixedPoint<32, 32>(-653.864786786));
+
     std::cout << std::setprecision(4) << std::fixed;
-
-    std::vector<FixedPoint_t<32, 32>> inputs;
-    inputs.emplace_back(FixedPoint_t<32, 32>(+6.5625));
-    inputs.emplace_back(FixedPoint_t<32, 32>(+4.2500));
-    inputs.emplace_back(FixedPoint_t<32, 32>(-2.2500));
-    inputs.emplace_back(FixedPoint_t<32, 32>(-4.2500));
-    inputs.emplace_back(FixedPoint_t<32, 32>(321.6543));
-    inputs.emplace_back(FixedPoint_t<32, 32>(76.7657));
-    inputs.emplace_back(FixedPoint_t<32, 32>(1023.2156346));
-    inputs.emplace_back(FixedPoint_t<32, 32>(-653.864786786));
-
     std::cout << "== INPUTS " << std::string(25, '=') << "\n";
     for (size_t it = 0; it < inputs.size(); ++it) {
         std::cout << "op" << it << " ["
@@ -40,17 +39,17 @@ int main()
                   << "\n";
     }
     std::cout << std::string(35, '=') << "\n";
-
     TEST_OP(+)
     TEST_OP(-)
     TEST_OP(*)
     TEST_OP(/)
-
+    std::cout << std::string(35, '=') << "\n";
     TEST_OP(<)
     TEST_OP(<=)
     TEST_OP(>)
     TEST_OP(>=)
     TEST_OP(==)
     TEST_OP(!=)
+    std::cout << std::string(35, '=') << "\n";
     return 0;
 }
