@@ -51,5 +51,28 @@ int main(int argc, char *argv[])
     TEST_OP(==)
     TEST_OP(!=)
     std::cout << std::string(35, '=') << "\n";
+    for (size_t it = 0; it < inputs.size(); ++it) {
+        std::cout << "round(" << inputs[it].to_number() << ") = " << round(inputs[it]) << "\n";
+    }
+    std::cout << std::string(35, '=') << "\n";
+    for (size_t it = 0; it < inputs.size(); ++it) {
+        std::cout << "abs(" << inputs[it].to_number() << ") = " << abs(inputs[it]) << "\n";
+    }
+    std::cout << std::string(35, '=') << "\n";
+    for (size_t it = 0; it < inputs.size(); ++it) {
+        std::cout << "sqrt(" << inputs[it].to_number() << ") = " << sqrt(inputs[it])
+                  << " vs " << std::sqrt(inputs[it].get_original()) << "\n";
+    }
+    std::cout << std::string(35, '=') << "\n";
+    for (size_t it = 0; it < inputs.size(); ++it) {
+        std::cout << "pow(" << inputs[it].to_number() << ", 3) = " << pow(inputs[it], 3)
+                  << " vs " << std::pow(inputs[it].get_original(), 3) << "\n";
+    }
+    std::cout << std::string(35, '=') << "\n";
+    for (size_t it = 0; it < inputs.size(); ++it) {
+        std::cout << "exp(" << inputs[it].to_number() << ") = " << exp(inputs[it])
+                  << " vs " << std::exp(inputs[it].get_original()) << "\n";
+    }
+    std::cout << std::string(35, '=') << "\n";
     return 0;
 }
