@@ -20,6 +20,11 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # -----------------------------------------------------------------------------
+# Dependencies.
+# -----------------------------------------------------------------------------
+add_subdirectory(submodules/BitVector EXCLUDE_FROM_ALL)
+
+# -----------------------------------------------------------------------------
 # Documentation target.
 # -----------------------------------------------------------------------------
 add_subdirectory(doc)
@@ -58,16 +63,15 @@ target_include_directories(
     ${PROJECT_NAME} INTERFACE
     # Include project directories.
     ${PROJECT_SOURCE_DIR}/include/
-    # Include external directories.
-    ${PROJECT_SOURCE_DIR}/submodules/BitVector/include
 )
 
 # -----------------------------------------------------------------------------
 # Add linked libraries (if required).
 # -----------------------------------------------------------------------------
-#target_link_libraries(
-#    ${PROJECT_NAME}
-#)
+target_link_libraries(
+    ${PROJECT_NAME} INTERFACE
+    bvlib
+)
 
 # -----------------------------------------------------------------------------
 # Add tests.
