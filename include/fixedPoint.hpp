@@ -52,7 +52,7 @@ public:
     }
 
     /// @brief Empty constructor.
-    explicit FixedPoint(double val)
+    FixedPoint(double val)
         : original(val),
           whole(),
           fractional()
