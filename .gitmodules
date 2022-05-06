@@ -1,3 +1,0 @@
-[submodule "submodules/BitVector"]
-	path = submodules/BitVector
-	url = https://github.com/Galfurian/BitVector.git

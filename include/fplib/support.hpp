@@ -22,12 +22,15 @@
 
 #pragma once
 
-#include "bitvector.hpp"
+#include "bvlib/bitvector.hpp"
 
 #include <string>
 
+namespace fplib
+{
+
 /// @brief Adds character c to the left of s, until s has a length of n.
-inline std::string lpad(std::string const &s, size_t n, char c)
+inline auto lpad(std::string const &s, size_t n, char c)
 {
     std::string _s = s;
     if (n > _s.length())
@@ -44,8 +47,8 @@ inline std::string rpad(std::string const &s, size_t n, char c)
     return _s;
 }
 
-template <long unsigned int FRACT>
-inline double fractional_to_float(BitVector<FRACT> const &fractional)
+template <std::size_t FRACT>
+inline auto fractional_to_float(bvlib::BitVector<FRACT> const &fractional)
 {
     double result = 0;
     for (long i = FRACT - 1; i >= 0; --i)
@@ -54,8 +57,8 @@ inline double fractional_to_float(BitVector<FRACT> const &fractional)
     return result;
 }
 
-template <long unsigned int FRACT>
-inline BitVector<FRACT> &float_to_fractional(double value, BitVector<FRACT> &fractional)
+template <std::size_t FRACT>
+inline auto float_to_fractional(double value, bvlib::BitVector<FRACT> &fractional)
 {
     double acc = 0;
     for (long it = (FRACT - 1); it >= 0; --it) {
@@ -68,18 +71,15 @@ inline BitVector<FRACT> &float_to_fractional(double value, BitVector<FRACT> &fra
     return fractional;
 }
 
-template <long unsigned int FRACT>
-inline BitVector<FRACT> float_to_fractional(double value)
+template <std::size_t FRACT>
+inline auto float_to_fractional(double value)
 {
-    BitVector<FRACT> fractional;
+    bvlib::BitVector<FRACT> fractional;
     return float_to_fractional<FRACT>(value, fractional);
 }
 
-template <long unsigned int WHOLE, long unsigned int FRACT>
-inline BitVector<WHOLE + FRACT> &recombine(
-    BitVector<WHOLE> const &whole,
-    BitVector<FRACT> const &fractional,
-    BitVector<WHOLE + FRACT> &recombined)
+template <std::size_t WHOLE, std::size_t FRACT>
+inline auto recombine(bvlib::BitVector<WHOLE> const &whole, bvlib::BitVector<FRACT> const &fractional, bvlib::BitVector<WHOLE + FRACT> &recombined)
 {
     size_t it;
     for (it = 0; it < WHOLE; ++it)
@@ -89,23 +89,20 @@ inline BitVector<WHOLE + FRACT> &recombine(
     return recombined;
 }
 
-template <long unsigned int WHOLE, long unsigned int FRACT>
-inline BitVector<WHOLE + FRACT> recombine(
-    BitVector<WHOLE> const &whole,
-    BitVector<FRACT> const &fractional)
+template <std::size_t WHOLE, std::size_t FRACT>
+inline auto recombine(bvlib::BitVector<WHOLE> const &whole, bvlib::BitVector<FRACT> const &fractional)
 {
-    BitVector<WHOLE + FRACT> recombined;
+    bvlib::BitVector<WHOLE + FRACT> recombined;
     return recombine(whole, fractional, recombined);
 }
 
-template <long unsigned int WHOLE, long unsigned int FRACT>
-inline void split(
-    BitVector<WHOLE + FRACT> const &full,
-    BitVector<WHOLE> &whole,
-    BitVector<FRACT> &fractional)
+template <std::size_t WHOLE, std::size_t FRACT>
+inline void split(bvlib::BitVector<WHOLE + FRACT> const &full, bvlib::BitVector<WHOLE> &whole, bvlib::BitVector<FRACT> &fractional)
 {
     for (size_t it = 0; it < WHOLE; ++it)
         whole[it] = full[it + FRACT];
     for (size_t it = 0; it < FRACT; ++it)
         fractional[it] = full[it];
 }
+
+} // namespace fplib

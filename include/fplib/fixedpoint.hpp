@@ -22,24 +22,28 @@
 
 #pragma once
 
-#include "bitvector.hpp"
+#include "bvlib/bitvector.hpp"
+#include "bvlib/math.hpp"
 #include "support.hpp"
 
 #include <fstream>
 #include <sstream>
 
+namespace fplib
+{
+
 /// @brief The fixed point class.
 /// @tparam WHOLE the size of the whole part.
 /// @tparam FRACT the size of the fractional part.
-template <long unsigned int WHOLE, long unsigned int FRACT>
+template <std::size_t WHOLE, std::size_t FRACT>
 class FixedPoint {
 private:
     /// The original value.
     double original;
     /// Whole part.
-    BitVector<WHOLE> whole;
+    bvlib::BitVector<WHOLE> whole;
     /// Fractional part.
-    BitVector<FRACT> fractional;
+    bvlib::BitVector<FRACT> fractional;
 
 public:
     /// @brief Empty constructor.
@@ -70,7 +74,7 @@ public:
     }
 
     /// @brief Constructor from bit-vectors, e.g., <0011>,<1000> = 3.5.
-    FixedPoint(const BitVector<WHOLE + FRACT> &_full)
+    FixedPoint(const bvlib::BitVector<WHOLE + FRACT> &_full)
         : original(),
           whole(),
           fractional()
@@ -79,7 +83,7 @@ public:
     }
 
     /// @brief Constructor from bit-vectors, e.g., <0011>,<1000> = 3.5.
-    FixedPoint(const BitVector<WHOLE> &_whole, const BitVector<FRACT> &_fractional)
+    FixedPoint(const bvlib::BitVector<WHOLE> &_whole, const bvlib::BitVector<FRACT> &_fractional)
         : original(),
           whole(_whole),
           fractional(_fractional)
@@ -88,7 +92,7 @@ public:
     }
 
     /// @brief Constructor from another fixed point.
-    FixedPoint(const FixedPoint &other)
+    FixedPoint(const FixedPoint<WHOLE, FRACT> &other)
         : original(other.original),
           whole(other.whole),
           fractional(other.fractional)
@@ -97,7 +101,7 @@ public:
     }
 
     /// @brief Constructor from another fixed point.
-    template <long unsigned int WHOLE2, long unsigned int FRACT2>
+    template <std::size_t WHOLE2, std::size_t FRACT2>
     FixedPoint(const FixedPoint<WHOLE2, FRACT2> &other)
         : original(),
           whole(),
@@ -111,32 +115,32 @@ public:
         return original;
     }
 
-    inline const BitVector<WHOLE> &get_whole() const
+    inline const bvlib::BitVector<WHOLE> &get_whole() const
     {
         return whole;
     }
 
-    inline bool get_whole(long unsigned int position) const
+    inline bool get_whole(std::size_t position) const
     {
         return whole[position];
     }
 
-    inline const BitVector<FRACT> &get_fractional() const
+    inline const bvlib::BitVector<FRACT> &get_fractional() const
     {
         return fractional;
     }
 
-    inline bool get_fractional(long unsigned int position) const
+    inline bool get_fractional(std::size_t position) const
     {
         return fractional[position];
     }
 
-    inline void set_whole(const BitVector<WHOLE> &_whole)
+    inline void set_whole(const bvlib::BitVector<WHOLE> &_whole)
     {
         whole = _whole;
     }
 
-    inline void set_whole(long unsigned int _whole)
+    inline void set_whole(std::size_t _whole)
     {
         whole = _whole;
     }
@@ -146,12 +150,12 @@ public:
         whole = lpad(_whole, WHOLE, '0');
     }
 
-    inline void set_fractional(const BitVector<FRACT> &_fractional)
+    inline void set_fractional(const bvlib::BitVector<FRACT> &_fractional)
     {
         fractional = _fractional;
     }
 
-    inline void set_fractional(long unsigned int _fractional)
+    inline void set_fractional(std::size_t _fractional)
     {
         fractional = _fractional;
     }
@@ -161,9 +165,9 @@ public:
         fractional = rpad(_fractional, FRACT, '0');
     }
 
-    static inline constexpr long unsigned int get_whole_max()
+    static inline constexpr std::size_t get_whole_max()
     {
-        return BitVector<WHOLE>::ones().reset(WHOLE - 1).to_number();
+        return bvlib::BitVector<WHOLE>::ones().reset(WHOLE - 1).to_number();
     }
 
     std::string to_string() const
@@ -174,12 +178,12 @@ public:
     double to_number() const
     {
         if (!whole.sign())
-            return whole.to_number() + fractional_to_float<FRACT>(fractional);
+            return whole.template to_number<double>() + fractional_to_float<FRACT>(fractional);
 
         // Support variables.
-        BitVector<WHOLE + FRACT> _recombined;
-        BitVector<WHOLE> _whole;
-        BitVector<FRACT> _fractional;
+        bvlib::BitVector<WHOLE + FRACT> _recombined;
+        bvlib::BitVector<WHOLE> _whole;
+        bvlib::BitVector<FRACT> _fractional;
 
         // 1. Recombine whole and fract.
         recombine(whole, fractional, _recombined);
@@ -189,7 +193,7 @@ public:
 
         // 3. Split the complemented value back into whole and fractional.
         split(_recombined, _whole, _fractional);
-        return -(_whole.to_number() + fractional_to_float<FRACT>(_fractional));
+        return -(_whole.template to_number<double>() + fractional_to_float<FRACT>(_fractional));
     }
 
     // ========================================================================
@@ -197,9 +201,9 @@ public:
     // ========================================================================
     inline FixedPoint<WHOLE, FRACT> &sum(const FixedPoint<WHOLE, FRACT> &rhs, FixedPoint<WHOLE, FRACT> &solution) const
     {
-        // Create bitvector for support.
-        BitVector<WHOLE + FRACT> op1;
-        BitVector<WHOLE + FRACT> op2;
+        // Create bvlib::BitVector for support.
+        bvlib::BitVector<WHOLE + FRACT> op1;
+        bvlib::BitVector<WHOLE + FRACT> op2;
 
         // Recombine the operators.
         recombine(whole, fractional, op1);
@@ -212,9 +216,9 @@ public:
 
     inline FixedPoint<WHOLE, FRACT> &sub(const FixedPoint<WHOLE, FRACT> &rhs, FixedPoint<WHOLE, FRACT> &solution) const
     {
-        // Create bitvector for support.
-        BitVector<WHOLE + FRACT> op1;
-        BitVector<WHOLE + FRACT> op2;
+        // Create bvlib::BitVector for support.
+        bvlib::BitVector<WHOLE + FRACT> op1;
+        bvlib::BitVector<WHOLE + FRACT> op2;
 
         // Recombine the operators.
         recombine(whole, fractional, op1);
@@ -227,10 +231,10 @@ public:
 
     inline FixedPoint<WHOLE, FRACT> &mul(const FixedPoint<WHOLE, FRACT> &rhs, FixedPoint<WHOLE, FRACT> &solution) const
     {
-        // Create bitvector for support.
-        BitVector<WHOLE * 2 + WHOLE * 2> support;
-        BitVector<WHOLE + FRACT> op1;
-        BitVector<WHOLE + FRACT> op2;
+        // Create bvlib::BitVector for support.
+        bvlib::BitVector<WHOLE * 2 + WHOLE * 2> support;
+        bvlib::BitVector<WHOLE + FRACT> op1;
+        bvlib::BitVector<WHOLE + FRACT> op2;
 
         // Recombine whole and fractional.
         recombine(whole, fractional, op1);
@@ -264,10 +268,10 @@ public:
 
     inline FixedPoint<WHOLE, FRACT> &div(const FixedPoint<WHOLE, FRACT> &rhs, FixedPoint<WHOLE, FRACT> &solution) const
     {
-        // Create bitvector for support.
-        BitVector<WHOLE + FRACT * 2> support;
-        BitVector<WHOLE + FRACT> _op1;
-        BitVector<WHOLE + FRACT> _op2;
+        // Create bvlib::BitVector for support.
+        bvlib::BitVector<WHOLE + FRACT * 2> support;
+        bvlib::BitVector<WHOLE + FRACT> _op1;
+        bvlib::BitVector<WHOLE + FRACT> _op2;
 
         // Recombine whole and fractional.
         recombine(whole, fractional, _op1);
@@ -284,8 +288,8 @@ public:
             _op2.two_complement();
 
         // Resize both bit-vectors.
-        BitVector<WHOLE + FRACT * 2> op1(rpad(_op1.to_string(), WHOLE + FRACT * 2, '0'));
-        BitVector<WHOLE + FRACT * 2> op2(_op2.to_string());
+        bvlib::BitVector<WHOLE + FRACT * 2> op1(rpad(_op1.to_string(), WHOLE + FRACT * 2, '0'));
+        bvlib::BitVector<WHOLE + FRACT * 2> op2(_op2.to_string());
 
         // Perform division.
         support = op1 / op2;
@@ -306,14 +310,24 @@ public:
     // ========================================================================
     // ASSIGN
     // ========================================================================
-    template <long unsigned int WHOLE2, long unsigned int FRACT2>
-    FixedPoint<WHOLE, FRACT> &operator=(const FixedPoint<WHOLE2, FRACT2> &rhs)
+    inline auto &operator=(const FixedPoint<WHOLE, FRACT> &rhs)
     {
+        // Copy the original value.
         original = rhs.get_original();
-
         // Copy whole part.
         whole.assign(rhs.get_whole());
-
+        // Copy fractional part.
+        fractional.assign(rhs.get_fractional());
+        return (*this);
+    }
+    
+    template <std::size_t WHOLE2, std::size_t FRACT2>
+    inline auto &operator=(const FixedPoint<WHOLE2, FRACT2> &rhs)
+    {
+        // Copy the original value.
+        original = rhs.get_original();
+        // Copy whole part.
+        whole.assign(rhs.get_whole());
         // Copy fractional part.
         fractional.rassign(rhs.get_fractional());
         if (rhs.get_whole().sign() && (WHOLE > WHOLE2))
@@ -322,14 +336,14 @@ public:
         return (*this);
     }
 
-    FixedPoint<WHOLE, FRACT> &operator=(double rhs)
+    inline auto &operator=(double rhs)
     {
         original = rhs;
         this->_set_from_double(rhs);
         return (*this);
     }
 
-    FixedPoint<WHOLE, FRACT> &operator=(const BitVector<WHOLE + FRACT> &rhs)
+    inline auto &operator=(const bvlib::BitVector<WHOLE + FRACT> &rhs)
     {
         split<WHOLE, FRACT>(rhs, whole, fractional);
         return *this;
@@ -388,11 +402,6 @@ public:
     // ========================================================================
     // MUL
     // ========================================================================
-    inline FixedPoint<WHOLE, FRACT> operator*(const FixedPoint<WHOLE, FRACT> &rhs) const
-    {
-        FixedPoint<WHOLE, FRACT> result;
-        return this->mul(rhs, result);
-    }
 
     inline FixedPoint<WHOLE, FRACT> operator*(double rhs) const
     {
@@ -468,8 +477,7 @@ public:
         if (!op1_neg && op2_neg)
             return false;
         // Recombine whole and fractional.
-        return recombine(whole, fractional) <
-               recombine(rhs.whole, rhs.fractional);
+        return recombine(whole, fractional) < recombine(rhs.whole, rhs.fractional);
     }
 
     inline bool operator<(double rhs) const
@@ -544,12 +552,12 @@ private:
         double fractpart, intpart;
         fractpart = modf(val, &intpart);
         // Set whole part.
-        whole = static_cast<long unsigned int>(intpart);
+        whole = static_cast<std::size_t>(intpart);
         // Set fractional part.
         fractional = float_to_fractional<FRACT>(fractpart);
         // Apply the sign.
         if (sign) {
-            BitVector<WHOLE + FRACT> full = recombine(whole, fractional);
+            bvlib::BitVector<WHOLE + FRACT> full = recombine(whole, fractional);
             full.two_complement();
             split(full, whole, fractional);
         }
@@ -559,25 +567,25 @@ private:
 // ========================================================================
 // ARITHMETIC OPERATIONS
 // ========================================================================
-template <long unsigned int WHOLE, long unsigned int FRACT>
+template <std::size_t WHOLE, std::size_t FRACT>
 inline FixedPoint<WHOLE, FRACT> operator+(double lhs, const FixedPoint<WHOLE, FRACT> &rhs)
 {
     return FixedPoint<WHOLE, FRACT>(lhs) + rhs;
 }
 
-template <long unsigned int WHOLE, long unsigned int FRACT>
+template <std::size_t WHOLE, std::size_t FRACT>
 inline FixedPoint<WHOLE, FRACT> operator-(double lhs, const FixedPoint<WHOLE, FRACT> &rhs)
 {
     return FixedPoint<WHOLE, FRACT>(lhs) - rhs;
 }
 
-template <long unsigned int WHOLE, long unsigned int FRACT>
+template <std::size_t WHOLE, std::size_t FRACT>
 inline FixedPoint<WHOLE, FRACT> operator*(double lhs, const FixedPoint<WHOLE, FRACT> &rhs)
 {
     return FixedPoint<WHOLE, FRACT>(lhs) * rhs;
 }
 
-template <long unsigned int WHOLE, long unsigned int FRACT>
+template <std::size_t WHOLE, std::size_t FRACT>
 inline FixedPoint<WHOLE, FRACT> operator/(double lhs, const FixedPoint<WHOLE, FRACT> &rhs)
 {
     static_assert(FRACT != 0, "You are trying to divide with a fractional precision of zero!");
@@ -587,21 +595,21 @@ inline FixedPoint<WHOLE, FRACT> operator/(double lhs, const FixedPoint<WHOLE, FR
 // ========================================================================
 // OPERATORS FOR OSTREAM
 // ========================================================================
-template <long unsigned int WHOLE, long unsigned int FRACT>
+template <std::size_t WHOLE, std::size_t FRACT>
 std::ostream &operator<<(std::ostream &lhs, const FixedPoint<WHOLE, FRACT> &rhs)
 {
     lhs << rhs.to_number();
     return lhs;
 }
 
-template <long unsigned int WHOLE, long unsigned int FRACT>
+template <std::size_t WHOLE, std::size_t FRACT>
 std::stringstream &operator<<(std::stringstream &lhs, const FixedPoint<WHOLE, FRACT> &rhs)
 {
     lhs << rhs.to_number();
     return lhs;
 }
 
-template <long unsigned int WHOLE, long unsigned int FRACT>
+template <std::size_t WHOLE, std::size_t FRACT>
 std::ifstream &operator>>(std::ifstream &lhs, FixedPoint<WHOLE, FRACT> &rhs)
 {
     std::string s;
@@ -611,7 +619,7 @@ std::ifstream &operator>>(std::ifstream &lhs, FixedPoint<WHOLE, FRACT> &rhs)
     return lhs;
 }
 
-template <long unsigned int WHOLE, long unsigned int FRACT>
+template <std::size_t WHOLE, std::size_t FRACT>
 std::stringstream &operator>>(std::stringstream &lhs, FixedPoint<WHOLE, FRACT> &rhs)
 {
     std::string s;
@@ -624,7 +632,7 @@ std::stringstream &operator>>(std::stringstream &lhs, FixedPoint<WHOLE, FRACT> &
 // ========================================================================
 // FUNCTIONS
 // ========================================================================
-template <long unsigned int WHOLE, long unsigned int FRACT>
+template <std::size_t WHOLE, std::size_t FRACT>
 FixedPoint<WHOLE, FRACT> round(const FixedPoint<WHOLE, FRACT> &fp)
 {
     FixedPoint<WHOLE, FRACT> rounded = fp;
@@ -634,7 +642,7 @@ FixedPoint<WHOLE, FRACT> round(const FixedPoint<WHOLE, FRACT> &fp)
     return rounded;
 }
 
-template <long unsigned int WHOLE, long unsigned int FRACT>
+template <std::size_t WHOLE, std::size_t FRACT>
 FixedPoint<WHOLE, FRACT> abs(const FixedPoint<WHOLE, FRACT> &fp)
 {
     if (!fp.get_whole().sign())
@@ -642,7 +650,7 @@ FixedPoint<WHOLE, FRACT> abs(const FixedPoint<WHOLE, FRACT> &fp)
     return recombine(fp.get_whole(), fp.get_fractional()).two_complement();
 }
 
-template <long unsigned int WHOLE, long unsigned int FRACT>
+template <std::size_t WHOLE, std::size_t FRACT>
 FixedPoint<WHOLE, FRACT> sqrt(
     const FixedPoint<WHOLE, FRACT> &value,
     long max_iterations            = 20,
@@ -656,7 +664,7 @@ FixedPoint<WHOLE, FRACT> sqrt(
     return result;
 }
 
-template <long unsigned int WHOLE, long unsigned int FRACT>
+template <std::size_t WHOLE, std::size_t FRACT>
 FixedPoint<WHOLE, FRACT> pow(const FixedPoint<WHOLE, FRACT> &value, unsigned exponent)
 {
     if (exponent == 0)
@@ -667,11 +675,44 @@ FixedPoint<WHOLE, FRACT> pow(const FixedPoint<WHOLE, FRACT> &value, unsigned exp
     return result;
 }
 
-template <long unsigned int WHOLE, long unsigned int FRACT>
+template <std::size_t WHOLE, std::size_t FRACT>
 inline FixedPoint<WHOLE, FRACT> exp(FixedPoint<WHOLE, FRACT> x, unsigned prec = 12)
 {
     x = 1.0 + (x / std::pow(2, prec));
     for (unsigned i = 0; i < prec; ++i)
         x *= x;
     return x;
+}
+
+} // namespace fplib
+
+#include <iostream>
+
+template <std::size_t WHOLE, std::size_t FRACT>
+inline auto operator*(const fplib::FixedPoint<WHOLE, FRACT> &lhs, const fplib::FixedPoint<WHOLE, FRACT> &rhs)
+{
+    // Create bvlib::BitVector for support.
+    bvlib::BitVector<WHOLE * 2 + WHOLE * 2> support;
+    bvlib::BitVector<WHOLE + FRACT> op1;
+    bvlib::BitVector<WHOLE + FRACT> op2;
+    // Recombine whole and fractional.
+    fplib::recombine(lhs.get_whole(), lhs.get_fractional(), op1);
+    fplib::recombine(rhs.get_whole(), rhs.get_fractional(), op2);
+    // Get the sign.
+    bool op1_neg = lhs.get_whole().sign();
+    bool op2_neg = rhs.get_whole().sign();
+    // Change signes.
+    if (op1_neg)
+        op1.two_complement();
+    if (op2_neg)
+        op2.two_complement();
+    // Compute multiplication with full precision.
+    support = bvlib::mul(op1, op2);
+    // Apply sign.
+    if (op1_neg != op2_neg)
+        support.two_complement();
+    // Change to string.
+    const std::string str = support.to_string();
+    // Split whole and fractional.
+    return fplib::FixedPoint<WHOLE, FRACT>(str.substr(WHOLE, WHOLE), str.substr(WHOLE * 2, FRACT));
 }
