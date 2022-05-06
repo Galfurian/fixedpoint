@@ -1,5 +1,7 @@
 # FixedPoint support class
 
+[![Main](https://github.com/Galfurian/fixedpoint/actions/workflows/main.yml/badge.svg)](https://github.com/Galfurian/fixedpoint/actions/workflows/main.yml)
+
 **Author**: Enrico Fraccaroli
 
 **Date**: July 24 2019
