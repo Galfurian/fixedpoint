@@ -78,14 +78,14 @@ inline auto float_to_fractional(double value)
     return float_to_fractional<FRACT>(value, fractional);
 }
 
-template <std::size_t WHOLE, std::size_t FRACT>
-inline auto recombine(bvlib::BitVector<WHOLE> const &whole, bvlib::BitVector<FRACT> const &fractional, bvlib::BitVector<WHOLE + FRACT> &recombined)
+template <std::size_t WHOLE, std::size_t FRACT, std::size_t OUT_WHOLE = WHOLE, std::size_t OUT_FRACT = FRACT>
+inline auto recombine(bvlib::BitVector<WHOLE> const &whole, bvlib::BitVector<FRACT> const &fractional, bvlib::BitVector<OUT_WHOLE + OUT_FRACT> &recombined)
 {
     size_t it;
-    for (it = 0; it < WHOLE; ++it)
-        recombined[it + FRACT] = whole[it];
-    for (it = 0; it < FRACT; ++it)
-        recombined[it] = fractional[it];
+    for (it = 0; it < std::min(WHOLE, OUT_WHOLE); ++it)
+        recombined[OUT_FRACT + it] = whole[it];
+    for (it = 0; it < std::min(FRACT, OUT_FRACT); ++it)
+        recombined.bits[OUT_WHOLE + it] = fractional.bits[it];
     return recombined;
 }
 

@@ -28,6 +28,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <iostream>
 
 namespace fplib
 {
@@ -46,6 +47,9 @@ private:
     bvlib::BitVector<FRACT> fractional;
 
 public:
+    const std::size_t whole_size = WHOLE;
+    const std::size_t fract_size = FRACT;
+
     /// @brief Empty constructor.
     FixedPoint()
         : original(),
@@ -84,6 +88,16 @@ public:
 
     /// @brief Constructor from bit-vectors, e.g., <0011>,<1000> = 3.5.
     FixedPoint(const bvlib::BitVector<WHOLE> &_whole, const bvlib::BitVector<FRACT> &_fractional)
+        : original(),
+          whole(_whole),
+          fractional(_fractional)
+    {
+        // Nothing to do.
+    }
+
+    /// @brief Constructor from bit-vectors, e.g., <0011>,<1000> = 3.5.
+    template <std::size_t WHOLE2, std::size_t FRACT2>
+    FixedPoint(const bvlib::BitVector<WHOLE2> &_whole, const bvlib::BitVector<FRACT2> &_fractional)
         : original(),
           whole(_whole),
           fractional(_fractional)
@@ -197,117 +211,6 @@ public:
     }
 
     // ========================================================================
-    // MATHEMATICAL OPERATIONS
-    // ========================================================================
-    inline FixedPoint<WHOLE, FRACT> &sum(const FixedPoint<WHOLE, FRACT> &rhs, FixedPoint<WHOLE, FRACT> &solution) const
-    {
-        // Create bvlib::BitVector for support.
-        bvlib::BitVector<WHOLE + FRACT> op1;
-        bvlib::BitVector<WHOLE + FRACT> op2;
-
-        // Recombine the operators.
-        recombine(whole, fractional, op1);
-        recombine(rhs.get_whole(), rhs.get_fractional(), op2);
-
-        // Compute subtraction and return result.
-        solution = op1 + op2;
-        return solution;
-    }
-
-    inline FixedPoint<WHOLE, FRACT> &sub(const FixedPoint<WHOLE, FRACT> &rhs, FixedPoint<WHOLE, FRACT> &solution) const
-    {
-        // Create bvlib::BitVector for support.
-        bvlib::BitVector<WHOLE + FRACT> op1;
-        bvlib::BitVector<WHOLE + FRACT> op2;
-
-        // Recombine the operators.
-        recombine(whole, fractional, op1);
-        recombine(rhs.get_whole(), rhs.get_fractional(), op2);
-
-        // Compute subtraction and return result.
-        solution = op1 - op2;
-        return solution;
-    }
-
-    inline FixedPoint<WHOLE, FRACT> &mul(const FixedPoint<WHOLE, FRACT> &rhs, FixedPoint<WHOLE, FRACT> &solution) const
-    {
-        // Create bvlib::BitVector for support.
-        bvlib::BitVector<WHOLE * 2 + WHOLE * 2> support;
-        bvlib::BitVector<WHOLE + FRACT> op1;
-        bvlib::BitVector<WHOLE + FRACT> op2;
-
-        // Recombine whole and fractional.
-        recombine(whole, fractional, op1);
-        recombine(rhs.get_whole(), rhs.get_fractional(), op2);
-
-        // Get the sign.
-        bool op1_neg = whole.sign();
-        bool op2_neg = rhs.get_whole().sign();
-
-        // Change signes.
-        if (op1_neg)
-            op1.two_complement();
-        if (op2_neg)
-            op2.two_complement();
-
-        // Compute multiplication with full precision.
-        support = op1 * op2;
-
-        // Apply sign.
-        if (op1_neg != op2_neg)
-            support.two_complement();
-
-        // Change to string.
-        const std::string str = support.to_string();
-
-        // Split whole and fractional.
-        solution.set_whole(str.substr(WHOLE, WHOLE));
-        solution.set_fractional(str.substr(WHOLE * 2, FRACT));
-        return solution;
-    }
-
-    inline FixedPoint<WHOLE, FRACT> &div(const FixedPoint<WHOLE, FRACT> &rhs, FixedPoint<WHOLE, FRACT> &solution) const
-    {
-        // Create bvlib::BitVector for support.
-        bvlib::BitVector<WHOLE + FRACT * 2> support;
-        bvlib::BitVector<WHOLE + FRACT> _op1;
-        bvlib::BitVector<WHOLE + FRACT> _op2;
-
-        // Recombine whole and fractional.
-        recombine(whole, fractional, _op1);
-        recombine(rhs.get_whole(), rhs.get_fractional(), _op2);
-
-        // Get the sign.
-        bool op1_neg = whole.sign();
-        bool op2_neg = rhs.get_whole().sign();
-
-        // Change signes.
-        if (op1_neg)
-            _op1.two_complement();
-        if (op2_neg)
-            _op2.two_complement();
-
-        // Resize both bit-vectors.
-        bvlib::BitVector<WHOLE + FRACT * 2> op1(rpad(_op1.to_string(), WHOLE + FRACT * 2, '0'));
-        bvlib::BitVector<WHOLE + FRACT * 2> op2(_op2.to_string());
-
-        // Perform division.
-        support = op1 / op2;
-
-        // Apply sign.
-        if (op1_neg != op2_neg)
-            support.two_complement();
-
-        // Change to string.
-        const std::string str = support.to_string();
-
-        // Split whole and fractional.
-        solution.set_whole(str.substr(FRACT, WHOLE));
-        solution.set_fractional(str.substr(WHOLE + FRACT, FRACT));
-        return solution;
-    }
-
-    // ========================================================================
     // ASSIGN
     // ========================================================================
     inline auto &operator=(const FixedPoint<WHOLE, FRACT> &rhs)
@@ -320,7 +223,7 @@ public:
         fractional.assign(rhs.get_fractional());
         return (*this);
     }
-    
+
     template <std::size_t WHOLE2, std::size_t FRACT2>
     inline auto &operator=(const FixedPoint<WHOLE2, FRACT2> &rhs)
     {
@@ -349,199 +252,6 @@ public:
         return *this;
     }
 
-    // ========================================================================
-    // SUM
-    // ========================================================================
-    inline FixedPoint<WHOLE, FRACT> operator+(const FixedPoint<WHOLE, FRACT> &rhs) const
-    {
-        FixedPoint<WHOLE, FRACT> result;
-        return this->sum(rhs, result);
-    }
-
-    inline FixedPoint<WHOLE, FRACT> operator+(double rhs) const
-    {
-        FixedPoint<WHOLE, FRACT> result;
-        return this->sum(FixedPoint<WHOLE, FRACT>(rhs), result);
-    }
-
-    inline FixedPoint<WHOLE, FRACT> operator+=(const FixedPoint<WHOLE, FRACT> &rhs)
-    {
-        return this->sum(rhs, *this);
-    }
-
-    inline FixedPoint<WHOLE, FRACT> operator+=(double rhs) const
-    {
-        return this->sum(FixedPoint<WHOLE, FRACT>(rhs), *this);
-    }
-
-    // ========================================================================
-    // SUB
-    // ========================================================================
-    inline FixedPoint<WHOLE, FRACT> operator-(const FixedPoint<WHOLE, FRACT> &rhs) const
-    {
-        FixedPoint<WHOLE, FRACT> result;
-        return this->sub(rhs, result);
-    }
-
-    inline FixedPoint<WHOLE, FRACT> operator-(double rhs) const
-    {
-        FixedPoint<WHOLE, FRACT> result;
-        return this->sub(FixedPoint<WHOLE, FRACT>(rhs), result);
-    }
-
-    inline FixedPoint<WHOLE, FRACT> &operator-=(const FixedPoint<WHOLE, FRACT> &rhs)
-    {
-        return this->sub(rhs, *this);
-    }
-
-    inline FixedPoint<WHOLE, FRACT> &operator-=(double rhs)
-    {
-        return this->sub(FixedPoint<WHOLE, FRACT>(rhs), *this);
-    }
-
-    // ========================================================================
-    // MUL
-    // ========================================================================
-
-    inline FixedPoint<WHOLE, FRACT> operator*(double rhs) const
-    {
-        FixedPoint<WHOLE, FRACT> result;
-        return this->mul(FixedPoint<WHOLE, FRACT>(rhs), result);
-    }
-
-    inline FixedPoint<WHOLE, FRACT> operator*=(const FixedPoint<WHOLE, FRACT> &rhs)
-    {
-        return this->mul(rhs, *this);
-    }
-
-    inline FixedPoint<WHOLE, FRACT> &operator*=(double rhs)
-    {
-        return this->mul(FixedPoint<WHOLE, FRACT>(rhs), *this);
-    }
-
-    // ========================================================================
-    // DIV
-    // ========================================================================
-    inline FixedPoint<WHOLE, FRACT> operator/(const FixedPoint<WHOLE, FRACT> &rhs) const
-    {
-        FixedPoint<WHOLE, FRACT> result;
-        return this->div(rhs, result);
-    }
-
-    inline FixedPoint<WHOLE, FRACT> operator/(double rhs) const
-    {
-        FixedPoint<WHOLE, FRACT> result;
-        return this->div(FixedPoint<WHOLE, FRACT>(rhs), result);
-    }
-
-    inline FixedPoint<WHOLE, FRACT> operator/=(const FixedPoint<WHOLE, FRACT> &rhs) const
-    {
-        return this->div(rhs, *this);
-    }
-
-    inline FixedPoint<WHOLE, FRACT> &operator/=(double rhs)
-    {
-        return this->div(FixedPoint<WHOLE, FRACT>(rhs), *this);
-    }
-
-    // ========================================================================
-    // EQUALITY OPs
-    // ========================================================================
-    inline bool operator==(const FixedPoint<WHOLE, FRACT> &rhs) const
-    {
-        return (whole == rhs.whole) && (fractional == rhs.fractional);
-    }
-
-    inline bool operator==(double rhs) const
-    {
-        return (*this) == FixedPoint<WHOLE, FRACT>(rhs);
-    }
-
-    inline bool operator!=(const FixedPoint<WHOLE, FRACT> &rhs) const
-    {
-        return (whole != rhs.whole) || (fractional != rhs.fractional);
-    }
-
-    inline bool operator!=(double rhs) const
-    {
-        return (*this) != FixedPoint<WHOLE, FRACT>(rhs);
-    }
-
-    inline bool operator<(const FixedPoint<WHOLE, FRACT> &rhs) const
-    {
-        // Get the sign.
-        bool op1_neg = whole.sign();
-        bool op2_neg = rhs.get_whole().sign();
-        if (op1_neg && !op2_neg)
-            return true;
-        if (!op1_neg && op2_neg)
-            return false;
-        // Recombine whole and fractional.
-        return recombine(whole, fractional) < recombine(rhs.whole, rhs.fractional);
-    }
-
-    inline bool operator<(double rhs) const
-    {
-        return (*this) < FixedPoint<WHOLE, FRACT>(rhs);
-    }
-
-    inline bool operator<=(const FixedPoint<WHOLE, FRACT> &rhs) const
-    {
-        // Get the sign.
-        bool op1_neg = whole.sign();
-        bool op2_neg = rhs.get_whole().sign();
-        if (op1_neg && !op2_neg)
-            return true;
-        if (!op1_neg && op2_neg)
-            return false;
-        // Recombine whole and fractional.
-        return recombine(whole, fractional) <=
-               recombine(rhs.whole, rhs.fractional);
-    }
-
-    inline bool operator<=(double rhs) const
-    {
-        return (*this) <= FixedPoint<WHOLE, FRACT>(rhs);
-    }
-
-    inline bool operator>(const FixedPoint<WHOLE, FRACT> &rhs) const
-    {
-        // Get the sign.
-        bool op1_neg = whole.sign();
-        bool op2_neg = rhs.get_whole().sign();
-        if (!op1_neg && op2_neg)
-            return true;
-        if (op1_neg && !op2_neg)
-            return false;
-        // Recombine whole and fractional.
-        return recombine(whole, fractional) >
-               recombine(rhs.whole, rhs.fractional);
-    }
-
-    inline bool operator>(double rhs) const
-    {
-        return (*this) > FixedPoint<WHOLE, FRACT>(rhs);
-    }
-
-    inline bool operator>=(const FixedPoint<WHOLE, FRACT> &rhs) const
-    {
-        // Get the sign.
-        bool op1_neg = whole.sign();
-        bool op2_neg = rhs.get_whole().sign();
-        if (!op1_neg && op2_neg)
-            return true;
-        if (op1_neg && !op2_neg)
-            return false;
-        // Recombine whole and fractional.
-        return recombine(whole, fractional) >=
-               recombine(rhs.whole, rhs.fractional);
-    }
-
-    inline bool operator>=(double rhs) const
-    {
-        return (*this) >= FixedPoint<WHOLE, FRACT>(rhs);
-    }
-
 private:
     void _set_from_double(double val)
     {
@@ -564,155 +274,4 @@ private:
     }
 };
 
-// ========================================================================
-// ARITHMETIC OPERATIONS
-// ========================================================================
-template <std::size_t WHOLE, std::size_t FRACT>
-inline FixedPoint<WHOLE, FRACT> operator+(double lhs, const FixedPoint<WHOLE, FRACT> &rhs)
-{
-    return FixedPoint<WHOLE, FRACT>(lhs) + rhs;
-}
-
-template <std::size_t WHOLE, std::size_t FRACT>
-inline FixedPoint<WHOLE, FRACT> operator-(double lhs, const FixedPoint<WHOLE, FRACT> &rhs)
-{
-    return FixedPoint<WHOLE, FRACT>(lhs) - rhs;
-}
-
-template <std::size_t WHOLE, std::size_t FRACT>
-inline FixedPoint<WHOLE, FRACT> operator*(double lhs, const FixedPoint<WHOLE, FRACT> &rhs)
-{
-    return FixedPoint<WHOLE, FRACT>(lhs) * rhs;
-}
-
-template <std::size_t WHOLE, std::size_t FRACT>
-inline FixedPoint<WHOLE, FRACT> operator/(double lhs, const FixedPoint<WHOLE, FRACT> &rhs)
-{
-    static_assert(FRACT != 0, "You are trying to divide with a fractional precision of zero!");
-    return FixedPoint<WHOLE, FRACT>(lhs) / rhs;
-}
-
-// ========================================================================
-// OPERATORS FOR OSTREAM
-// ========================================================================
-template <std::size_t WHOLE, std::size_t FRACT>
-std::ostream &operator<<(std::ostream &lhs, const FixedPoint<WHOLE, FRACT> &rhs)
-{
-    lhs << rhs.to_number();
-    return lhs;
-}
-
-template <std::size_t WHOLE, std::size_t FRACT>
-std::stringstream &operator<<(std::stringstream &lhs, const FixedPoint<WHOLE, FRACT> &rhs)
-{
-    lhs << rhs.to_number();
-    return lhs;
-}
-
-template <std::size_t WHOLE, std::size_t FRACT>
-std::ifstream &operator>>(std::ifstream &lhs, FixedPoint<WHOLE, FRACT> &rhs)
-{
-    std::string s;
-    lhs >> s;
-    size_t size;
-    rhs = std::stof(s, &size);
-    return lhs;
-}
-
-template <std::size_t WHOLE, std::size_t FRACT>
-std::stringstream &operator>>(std::stringstream &lhs, FixedPoint<WHOLE, FRACT> &rhs)
-{
-    std::string s;
-    lhs >> s;
-    size_t size;
-    rhs = std::stof(s, &size);
-    return lhs;
-}
-
-// ========================================================================
-// FUNCTIONS
-// ========================================================================
-template <std::size_t WHOLE, std::size_t FRACT>
-FixedPoint<WHOLE, FRACT> round(const FixedPoint<WHOLE, FRACT> &fp)
-{
-    FixedPoint<WHOLE, FRACT> rounded = fp;
-    if ((FRACT >= 1) && rounded.get_fractional().at(FRACT - 1))
-        rounded = rounded + 1;
-    rounded.set_fractional(0);
-    return rounded;
-}
-
-template <std::size_t WHOLE, std::size_t FRACT>
-FixedPoint<WHOLE, FRACT> abs(const FixedPoint<WHOLE, FRACT> &fp)
-{
-    if (!fp.get_whole().sign())
-        return fp;
-    return recombine(fp.get_whole(), fp.get_fractional()).two_complement();
-}
-
-template <std::size_t WHOLE, std::size_t FRACT>
-FixedPoint<WHOLE, FRACT> sqrt(
-    const FixedPoint<WHOLE, FRACT> &value,
-    long max_iterations            = 20,
-    FixedPoint<WHOLE, FRACT> error = FixedPoint<WHOLE, FRACT>(0.001))
-{
-    FixedPoint<WHOLE, FRACT> result(1.0);
-    int iteration = 0;
-    while ((iteration++ < max_iterations) &&
-           (abs((result * result) - value) >= error))
-        result = 0.5f * (result + (value / result));
-    return result;
-}
-
-template <std::size_t WHOLE, std::size_t FRACT>
-FixedPoint<WHOLE, FRACT> pow(const FixedPoint<WHOLE, FRACT> &value, unsigned exponent)
-{
-    if (exponent == 0)
-        return FixedPoint<WHOLE, FRACT>(1);
-    FixedPoint<WHOLE, FRACT> result = value;
-    for (unsigned it = 1; it < exponent; ++it)
-        result *= value;
-    return result;
-}
-
-template <std::size_t WHOLE, std::size_t FRACT>
-inline FixedPoint<WHOLE, FRACT> exp(FixedPoint<WHOLE, FRACT> x, unsigned prec = 12)
-{
-    x = 1.0 + (x / std::pow(2, prec));
-    for (unsigned i = 0; i < prec; ++i)
-        x *= x;
-    return x;
-}
-
 } // namespace fplib
-
-#include <iostream>
-
-template <std::size_t WHOLE, std::size_t FRACT>
-inline auto operator*(const fplib::FixedPoint<WHOLE, FRACT> &lhs, const fplib::FixedPoint<WHOLE, FRACT> &rhs)
-{
-    // Create bvlib::BitVector for support.
-    bvlib::BitVector<WHOLE * 2 + WHOLE * 2> support;
-    bvlib::BitVector<WHOLE + FRACT> op1;
-    bvlib::BitVector<WHOLE + FRACT> op2;
-    // Recombine whole and fractional.
-    fplib::recombine(lhs.get_whole(), lhs.get_fractional(), op1);
-    fplib::recombine(rhs.get_whole(), rhs.get_fractional(), op2);
-    // Get the sign.
-    bool op1_neg = lhs.get_whole().sign();
-    bool op2_neg = rhs.get_whole().sign();
-    // Change signes.
-    if (op1_neg)
-        op1.two_complement();
-    if (op2_neg)
-        op2.two_complement();
-    // Compute multiplication with full precision.
-    support = bvlib::mul(op1, op2);
-    // Apply sign.
-    if (op1_neg != op2_neg)
-        support.two_complement();
-    // Change to string.
-    const std::string str = support.to_string();
-    // Split whole and fractional.
-    return fplib::FixedPoint<WHOLE, FRACT>(str.substr(WHOLE, WHOLE), str.substr(WHOLE * 2, FRACT));
-}
