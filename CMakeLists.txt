@@ -35,6 +35,13 @@ option(WARNINGS_AS_ERRORS "Treat all warnings as errors" OFF)
 option(BUILD_EXAMPLES "Build examples" OFF)
 
 # -----------------------------------------------------------------------------
+# DEPENDENCIES
+# -----------------------------------------------------------------------------
+
+# We want doxygen for the documentation.
+find_package(Doxygen)
+
+# -----------------------------------------------------------------------------
 # External projects.
 # -----------------------------------------------------------------------------
 message(STATUS "Retrieving `bitvector`...")
@@ -93,6 +100,37 @@ if(STRICT_WARNINGS)
 endif()
 
 # -----------------------------------------------------------------------------
+# EXAMPLES
+# -----------------------------------------------------------------------------
+
+if(BUILD_EXAMPLES)
+
+    # Add the example.
+    add_executable(${PROJECT_NAME}_example ${PROJECT_SOURCE_DIR}/examples/example.cpp)
+    # Liking for the test.
+    target_link_libraries(${PROJECT_NAME}_example fplib)
+
+endif()
+
+# -----------------------------------------------------------------------------
+# TESTS
+# -----------------------------------------------------------------------------
+
+if(BUILD_TESTS)
+
+    # CMake has support for adding tests to a project.
+    enable_testing()
+
+    # Add the test.
+    add_executable(${PROJECT_NAME}_test_fixedpoint ${PROJECT_SOURCE_DIR}/tests/test_fixedpoint.cpp)
+    # Liking for the test.
+    target_link_libraries(${PROJECT_NAME}_test_fixedpoint ${PROJECT_NAME})
+    # Add the test.
+    add_test(${PROJECT_NAME}_test_fixedpoint_run ${PROJECT_NAME}_test_fixedpoint)
+
+endif()
+
+# -----------------------------------------------------------------------------
 # DOCUMENTATION
 # -----------------------------------------------------------------------------
 
@@ -132,41 +170,10 @@ if(DOXYGEN_FOUND)
     )
     doxygen_add_docs(
         ${PROJECT_NAME}_documentation
-        ./include/fplib/fixedpoint.hpp
-        ./include/fplib/math.hpp
-        ./include/fplib/support.hpp
-        LICENSE.md
-        README.md
+        ${PROJECT_SOURCE_DIR}/include/fplib/fixedpoint.hpp
+        ${PROJECT_SOURCE_DIR}/include/fplib/math.hpp
+        ${PROJECT_SOURCE_DIR}/include/fplib/support.hpp
+        ${PROJECT_SOURCE_DIR}/LICENSE.md
+        ${PROJECT_SOURCE_DIR}/README.md
     )
-endif()
-
-# -----------------------------------------------------------------------------
-# EXAMPLES
-# -----------------------------------------------------------------------------
-
-if(BUILD_EXAMPLES)
-
-    # Add the example.
-    add_executable(${PROJECT_NAME}_example ${PROJECT_SOURCE_DIR}/examples/example.cpp)
-    # Liking for the test.
-    target_link_libraries(${PROJECT_NAME}_example fplib)
-
-endif()
-
-# -----------------------------------------------------------------------------
-# TESTS
-# -----------------------------------------------------------------------------
-
-if(BUILD_TESTS)
-
-    # CMake has support for adding tests to a project.
-    enable_testing()
-
-    # Add the test.
-    add_executable(${PROJECT_NAME}_test_fixedpoint ${PROJECT_SOURCE_DIR}/tests/test_fixedpoint.cpp)
-    # Liking for the test.
-    target_link_libraries(${PROJECT_NAME}_test_fixedpoint ${PROJECT_NAME})
-    # Add the test.
-    add_test(${PROJECT_NAME}_test_fixedpoint_run ${PROJECT_NAME}_test_fixedpoint)
-
 endif()
