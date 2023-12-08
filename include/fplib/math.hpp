@@ -98,6 +98,7 @@ inline auto div(const FixedPoint<WHOLE1, FRACT1> &lhs, const FixedPoint<WHOLE2, 
     }
     // Perform multiplication.
     auto [quotient, remainder] = bvlib::div(op1 << FRACT, op2);
+    (void) remainder;
     // Apply sign.
     if (op1_neg != op2_neg)
         quotient.two_complement();
