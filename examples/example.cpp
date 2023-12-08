@@ -1,7 +1,7 @@
 #include "fplib/fixedpoint.hpp"
 #include "fplib/math.hpp"
+#include "fplib/io.hpp"
 
-#include <iostream>
 #include <iomanip>
 #include <random>
 #include <vector>
@@ -9,11 +9,11 @@
 int main(int, char *[])
 {
     double __a = 0.125, __b = 2;
-    fplib::FixedPoint<5, 4> a = __a;
-    fplib::FixedPoint<3, 6> b = __b;
+    fplib::FixedPoint<5, 4> a(__a);
+    fplib::FixedPoint<3, 6> b(__b);
 
-    std::cout << a << " (" << a.to_string() << ")\n";
-    std::cout << b << " (" << b.to_string() << ")\n";
+    std::cout << __a << " (" << a.to_string() << ")\n";
+    std::cout << __b << " (" << b.to_string() << ")\n";
     std::cout << " " << __a << " / " << __b << " = " << (__a / __b) << "\n";
     std::cout << " " << a << " / " << b << " = " << (a / b) << "\n";
 

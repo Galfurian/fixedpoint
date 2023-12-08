@@ -5,8 +5,6 @@
 #include "fixedpoint.hpp"
 #include "support.hpp"
 
-#include <iostream>
-
 namespace fplib
 {
 
@@ -198,69 +196,69 @@ inline auto operator/(const fplib::FixedPoint<WHOLE, FRACT> &lhs, T rhs)
 template <std::size_t WHOLE1, std::size_t FRACT1, std::size_t WHOLE2, std::size_t FRACT2>
 inline bool operator==(const fplib::FixedPoint<WHOLE1, FRACT1> &lhs, const fplib::FixedPoint<WHOLE2, FRACT2> &rhs)
 {
-    return (WHOLE1 == WHOLE2) && (FRACT1 == FRACT2) && (lhs.whole == rhs.whole) && (lhs.fractional == rhs.fractional);
+    return (WHOLE1 == WHOLE2) && (FRACT1 == FRACT2) && (lhs.get_whole() == rhs.get_whole()) && (lhs.get_fractional() == rhs.get_fractional());
 }
 
 template <std::size_t WHOLE1, std::size_t FRACT1, std::size_t WHOLE2, std::size_t FRACT2>
 inline bool operator!=(const fplib::FixedPoint<WHOLE1, FRACT1> &lhs, const fplib::FixedPoint<WHOLE2, FRACT2> &rhs)
 {
-    return (WHOLE1 != WHOLE2) || (FRACT1 != FRACT2) || (lhs.whole != rhs.whole) || (lhs.fractional != rhs.fractional);
+    return (WHOLE1 != WHOLE2) || (FRACT1 != FRACT2) || (lhs.get_whole() != rhs.get_whole()) || (lhs.get_fractional() != rhs.get_fractional());
 }
 
 template <std::size_t WHOLE1, std::size_t FRACT1, std::size_t WHOLE2, std::size_t FRACT2>
 inline bool operator<(const fplib::FixedPoint<WHOLE1, FRACT1> &lhs, const fplib::FixedPoint<WHOLE2, FRACT2> &rhs)
 {
     // Get the sign.
-    bool op1_neg = lhs.whole.sign(), op2_neg = rhs.whole.sign();
+    bool op1_neg = lhs.get_whole().sign(), op2_neg = rhs.get_whole().sign();
     // Check the sign first, it's faster.
     if (op1_neg && !op2_neg)
         return true;
     if (!op1_neg && op2_neg)
         return false;
     // Recombine whole and fractional.
-    return fplib::recombine(lhs.whole, lhs.fractional) < fplib::recombine(rhs.whole, rhs.fractional);
+    return fplib::recombine(lhs.get_whole(), lhs.get_fractional()) < fplib::recombine(rhs.get_whole(), rhs.get_fractional());
 }
 
 template <std::size_t WHOLE1, std::size_t FRACT1, std::size_t WHOLE2, std::size_t FRACT2>
 inline bool operator>(const fplib::FixedPoint<WHOLE1, FRACT1> &lhs, const fplib::FixedPoint<WHOLE2, FRACT2> &rhs)
 {
     // Get the sign.
-    bool op1_neg = lhs.whole.sign(), op2_neg = rhs.whole.sign();
+    bool op1_neg = lhs.get_whole().sign(), op2_neg = rhs.get_whole().sign();
     // Check the sign first, it's faster.
     if (!op1_neg && op2_neg)
         return true;
     if (op1_neg && !op2_neg)
         return false;
     // Recombine whole and fractional.
-    return fplib::recombine(lhs.whole, lhs.fractional) > fplib::recombine(rhs.whole, rhs.fractional);
+    return fplib::recombine(lhs.get_whole(), lhs.get_fractional()) > fplib::recombine(rhs.get_whole(), rhs.get_fractional());
 }
 
 template <std::size_t WHOLE1, std::size_t FRACT1, std::size_t WHOLE2, std::size_t FRACT2>
 inline bool operator<=(const fplib::FixedPoint<WHOLE1, FRACT1> &lhs, const fplib::FixedPoint<WHOLE2, FRACT2> &rhs)
 {
     // Get the sign.
-    bool op1_neg = lhs.whole.sign(), op2_neg = rhs.whole.sign();
+    bool op1_neg = lhs.get_whole().sign(), op2_neg = rhs.get_whole().sign();
     // Check the sign first, it's faster.
     if (op1_neg && !op2_neg)
         return true;
     if (!op1_neg && op2_neg)
         return false;
     // Recombine whole and fractional.
-    return fplib::recombine(lhs.whole, lhs.fractional) <= fplib::recombine(rhs.whole, rhs.fractional);
+    return fplib::recombine(lhs.get_whole(), lhs.get_fractional()) <= fplib::recombine(rhs.get_whole(), rhs.get_fractional());
 }
 
 template <std::size_t WHOLE1, std::size_t FRACT1, std::size_t WHOLE2, std::size_t FRACT2>
 inline bool operator>=(const fplib::FixedPoint<WHOLE1, FRACT1> &lhs, const fplib::FixedPoint<WHOLE2, FRACT2> &rhs)
 {
     // Get the sign.
-    bool op1_neg = lhs.whole.sign(), op2_neg = rhs.whole.sign();
+    bool op1_neg = lhs.get_whole().sign(), op2_neg = rhs.get_whole().sign();
     // Check the sign first, it's faster.
     if (!op1_neg && op2_neg)
         return true;
     if (op1_neg && !op2_neg)
         return false;
     // Recombine whole and fractional.
-    return fplib::recombine(lhs.whole, lhs.fractional) >= fplib::recombine(rhs.whole, rhs.fractional);
+    return fplib::recombine(lhs.get_whole(), lhs.get_fractional()) >= fplib::recombine(rhs.get_whole(), rhs.get_fractional());
 }
 
 // ========================================================================
@@ -336,43 +334,6 @@ template <typename T, std::size_t WHOLE, std::size_t FRACT>
 inline bool operator<=(T lhs, const fplib::FixedPoint<WHOLE, FRACT> &rhs)
 {
     return fplib::FixedPoint<WHOLE, FRACT>(lhs) <= rhs;
-}
-
-// ========================================================================
-// OPERATORS FOR OSTREAM
-// ========================================================================
-template <std::size_t WHOLE, std::size_t FRACT>
-std::ostream &operator<<(std::ostream &lhs, const fplib::FixedPoint<WHOLE, FRACT> &rhs)
-{
-    lhs << rhs.to_number();
-    return lhs;
-}
-
-template <std::size_t WHOLE, std::size_t FRACT>
-std::stringstream &operator<<(std::stringstream &lhs, const fplib::FixedPoint<WHOLE, FRACT> &rhs)
-{
-    lhs << rhs.to_number();
-    return lhs;
-}
-
-template <std::size_t WHOLE, std::size_t FRACT>
-std::ifstream &operator>>(std::ifstream &lhs, fplib::FixedPoint<WHOLE, FRACT> &rhs)
-{
-    std::string s;
-    lhs >> s;
-    size_t size;
-    rhs = std::stof(s, &size);
-    return lhs;
-}
-
-template <std::size_t WHOLE, std::size_t FRACT>
-std::stringstream &operator>>(std::stringstream &lhs, fplib::FixedPoint<WHOLE, FRACT> &rhs)
-{
-    std::string s;
-    lhs >> s;
-    size_t size;
-    rhs = std::stof(s, &size);
-    return lhs;
 }
 
 // ========================================================================

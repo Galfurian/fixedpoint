@@ -51,9 +51,11 @@ template <std::size_t FRACT>
 inline auto fractional_to_float(bvlib::BitVector<FRACT> const &fractional)
 {
     double result = 0;
-    for (long i = FRACT - 1; i >= 0; --i)
-        if (fractional[i])
+    for (std::size_t i = 0; i < FRACT; ++i) {
+        if (fractional[i]) {
             result += 1 / std::pow(2, FRACT - i);
+        }
+    }
     return result;
 }
 
@@ -61,10 +63,10 @@ template <std::size_t FRACT>
 inline auto float_to_fractional(double value, bvlib::BitVector<FRACT> &fractional)
 {
     double acc = 0;
-    for (long it = (FRACT - 1); it >= 0; --it) {
-        double element = 1.0 / (1U << (FRACT - it));
+    for (std::size_t i = 0; i < FRACT; ++i) {
+        double element = 1.0 / (1U << (FRACT - i));
         if ((acc + element) <= value) {
-            fractional.flip(it);
+            fractional.flip(i);
             acc += element;
         }
     }
